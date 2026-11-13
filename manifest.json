@@ -1,0 +1,25 @@
+{
+  "name": "MJLauncher",
+  "short_name": "MJLauncher",
+  "description": "MJLauncher - play Minecraft: Java Edition, manage instances and launch any version.",
+  "start_url": "./mojolauncher.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#1e1e1e",
+  "theme_color": "#252525",
+  "icons": [
+    {
+      "src": "https://play-lh.googleusercontent.com/tCA4RpE6ApDUzkHuzV-ppSwCD4K3YzT1r09-RoMv-1Ky59WDTNZo3S2-dpvbFdWvJ2F__4j3GOgCJCW2Id4upQ",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://play-lh.googleusercontent.com/tCA4RpE6ApDUzkHuzV-ppSwCD4K3YzT1r09-RoMv-1Ky59WDTNZo3S2-dpvbFdWvJ2F__4j3GOgCJCW2Id4upQ",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
