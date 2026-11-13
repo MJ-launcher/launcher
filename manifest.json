@@ -2,7 +2,7 @@
   "name": "MJLauncher",
   "short_name": "MJLauncher",
   "description": "MJLauncher - play Minecraft: Java Edition, manage instances and launch any version.",
-  "start_url": "./mojolauncher.html",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
