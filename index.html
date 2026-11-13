@@ -1,0 +1,1366 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MJLauncher</title>
+<meta name="description" content="MJLauncher - play Minecraft: Java Edition, manage instances and launch any version.">
+<meta name="theme-color" content="#252525">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MJLauncher">
+
+<link rel="icon" href="https://play-lh.googleusercontent.com/tCA4RpE6ApDUzkHuzV-ppSwCD4K3YzT1r09-RoMv-1Ky59WDTNZo3S2-dpvbFdWvJ2F__4j3GOgCJCW2Id4upQ">
+<link rel="apple-touch-icon" href="https://play-lh.googleusercontent.com/tCA4RpE6ApDUzkHuzV-ppSwCD4K3YzT1r09-RoMv-1Ky59WDTNZo3S2-dpvbFdWvJ2F__4j3GOgCJCW2Id4upQ">
+<link rel="manifest" href="manifest.json">
+
+<style>
+:root {
+  --bg: #1e1e1e;
+  --bar: #252525;
+  --bar-line: #4ab8d8;
+  --panel: #232323;
+  --card: #242424;
+  --input-bg: #161616;
+  --input-border: #a0a0a0;
+  --text: #ffffff;
+  --text-dim: #9a9a9a;
+  --label: #cccccc;
+  --faint: rgba(255, 255, 255, 0.45);
+  --teal: #2fa3b5;
+  --teal-hi: #5fd4de;
+  --teal-lo: #1e6e7c;
+  --gray-btn: #555555;
+  --row-hover: #2a2a2a;
+  --row-sel: #353535;
+  --divider: #3a3a3a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; text-align: inherit; }
+button:disabled { cursor: not-allowed; }
+input, select { font: inherit; }
+img, svg { display: block; }
+
+#app { display: flex; flex-direction: column; height: 100vh; }
+
+/* ============ top bar ============ */
+.topbar {
+  flex-shrink: 0;
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 22px;
+  background: var(--bar);
+  border-bottom: 3px solid var(--bar-line);
+}
+.tb-title { font-size: 22px; font-weight: 400; color: #dddddd; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tb-title.btnlike { cursor: pointer; }
+.tb-title.btnlike:hover { color: #fff; }
+.tb-right { display: flex; align-items: center; gap: 18px; }
+.tb-icon { padding: 6px; opacity: 0.92; }
+.tb-icon:hover { opacity: 1; }
+
+/* ============ main screen ============ */
+.screen { flex: 1 1 0%; min-height: 0; overflow-y: auto; }
+.menu-wrap {
+  display: flex;
+  padding: 10px 0 18px;
+}
+.menu-col { flex: 1 1 50%; min-width: 0; }
+.menu-col.right-col { border-left: 1px solid var(--divider); }
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 20px 26px;
+  width: 100%;
+  text-align: left;
+  transition: background-color 120ms ease;
+}
+.menu-item:hover { background: var(--row-hover); }
+.menu-item .mi-label { font-size: 16px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #fff; }
+@media (max-width: 700px) {
+  .menu-wrap { flex-direction: column; }
+  .menu-col.right-col { border-left: 0; }
+}
+
+.inst-section { background: var(--panel); border-top: 1px solid var(--divider); padding: 8px 0 14px; }
+.inst-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 13px 26px;
+  text-align: left;
+  transition: background-color 120ms ease;
+}
+.inst-row:hover { background: var(--row-hover); }
+.inst-row.sel { background: var(--row-sel); }
+.inst-row .ir-txt { min-width: 0; }
+.inst-row .ir-name { font-size: 16px; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inst-row .ir-sub { font-size: 13px; color: var(--text-dim); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inst-row .ir-icon { flex-shrink: 0; display: flex; }
+
+/* ============ bottom bar ============ */
+.botbar { flex-shrink: 0; position: relative; background: var(--bar); }
+.bb-row { display: flex; align-items: stretch; height: 78px; }
+.bb-left { display: flex; align-items: center; gap: 16px; padding: 0 20px; min-width: 0; flex: 1; }
+.bb-version { font-size: 17px; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bb-icon { display: flex; align-items: center; padding: 0 12px; opacity: 0.92; }
+.bb-icon:hover { opacity: 1; background: #2c2c2c; }
+.bb-icon .chev { transition: transform 180ms ease; }
+.bb-icon.open .chev { transform: rotate(180deg); }
+.play-btn {
+  flex-shrink: 0;
+  width: 148px;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #fff;
+  background: var(--teal);
+  border: 4px solid;
+  border-color: var(--teal-hi) var(--teal-lo) var(--teal-lo) var(--teal-hi);
+}
+.play-btn:hover { filter: brightness(1.1); }
+.play-btn:active { border-color: var(--teal-lo) var(--teal-hi) var(--teal-hi) var(--teal-lo); }
+.play-btn:disabled { filter: saturate(0.3) brightness(0.6); }
+
+.bb-panel {
+  position: absolute;
+  left: 0; right: 148px;
+  bottom: 100%;
+  background: #202020;
+  border-top: 1px solid var(--divider);
+  max-height: 320px;
+  overflow-y: auto;
+  box-shadow: 0 -10px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* ============ generic teal / gray buttons ============ */
+.btn-teal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 22px;
+  min-height: 62px;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--teal);
+  border: 4px solid;
+  border-color: var(--teal-hi) var(--teal-lo) var(--teal-lo) var(--teal-hi);
+}
+.btn-teal:hover { filter: brightness(1.1); }
+.btn-teal:active { border-color: var(--teal-lo) var(--teal-hi) var(--teal-hi) var(--teal-lo); }
+.btn-gray {
+  padding: 0 18px;
+  min-height: 46px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--gray-btn);
+  border-radius: 4px;
+}
+.btn-gray:hover { background: #616161; }
+
+/* ============ sub screens ============ */
+.page { padding: 26px 26px 40px; max-width: 860px; margin: 0 auto; }
+.page-wide { padding: 0; }
+.section-title {
+  font-size: 22px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #fff;
+  text-align: center;
+  padding: 18px 12px;
+  background: #1a1a1a;
+  border-top: 1px solid var(--divider);
+  border-bottom: 1px solid var(--divider);
+  margin: 26px 0 22px;
+}
+.section-title:first-child { margin-top: 0; border-top: 0; }
+.stack { display: flex; flex-direction: column; gap: 16px; }
+.stack-tight { display: flex; flex-direction: column; gap: 10px; }
+
+.field { display: flex; flex-direction: column; gap: 7px; }
+.field-label { font-size: 15px; color: var(--label); }
+.field-row { display: flex; align-items: stretch; gap: 12px; }
+.field-row .grow { flex: 1; min-width: 0; }
+
+.f-input {
+  width: 100%;
+  min-height: 54px;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 4px;
+  padding: 6px 16px;
+  font-size: 16px;
+  color: #fff;
+  outline: none;
+}
+.f-input::placeholder { color: var(--faint); }
+.f-input:focus { border-color: var(--bar-line); }
+
+.f-select {
+  width: 100%;
+  min-height: 54px;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 16px;
+  color: #fff;
+  outline: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23bbbbbb' stroke-width='1.6' fill='none'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 12px;
+  padding-right: 36px;
+}
+.f-select:focus { border-color: var(--bar-line); }
+.f-select option { background: #222; color: #fff; }
+
+.f-value {
+  display: flex;
+  align-items: center;
+  min-height: 54px;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 4px;
+  padding: 6px 16px;
+  font-size: 16px;
+  color: #fff;
+  overflow: hidden;
+}
+.f-value.dim { color: var(--faint); }
+.f-value .fv-btn { margin-left: auto; }
+
+.toggle-row { cursor: pointer; user-select: none; }
+.toggle-row .f-value { transition: border-color 120ms ease; }
+.toggle-row.on .f-value { border: 2px solid var(--bar-line); color: #fff; padding: 5px 15px; }
+.toggle-row.on .f-value .sub { color: #fff; }
+.f-value .sub { font-size: 15px; }
+
+.duo { display: flex; gap: 16px; margin-top: 30px; }
+.duo .btn-teal { flex: 1; }
+@media (max-width: 560px) { .duo { flex-direction: column; } }
+
+/* ============ card (login / account) ============ */
+.card {
+  background: var(--card);
+  border-radius: 8px;
+  padding: 26px;
+  max-width: 430px;
+  margin: 48px auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.card .note { font-size: 14px; color: var(--text-dim); line-height: 1.5; }
+
+/* ============ picker overlay ============ */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(0, 0, 0, 0.62);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 7vh 18px 18px;
+}
+.ov-card {
+  width: 480px;
+  max-width: 100%;
+  max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.ov-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 2px solid var(--bar-line);
+}
+.ov-title { font-size: 18px; font-weight: 700; color: #fff; }
+.ov-list { overflow-y: auto; padding: 8px 0; }
+.ov-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 18px;
+  text-align: left;
+  transition: background-color 120ms ease;
+}
+.ov-item:hover { background: var(--row-hover); }
+.ov-item .oi-txt { flex: 1; min-width: 0; }
+.ov-item .oi-main { font-size: 16px; color: #fff; }
+.ov-item .oi-sub { font-size: 13px; color: var(--text-dim); margin-top: 2px; }
+.ov-item .oi-chk { color: var(--bar-line); flex-shrink: 0; }
+.ov-empty { padding: 26px 18px; font-size: 14px; color: var(--text-dim); text-align: center; }
+
+/* ============ toasts ============ */
+#toasts {
+  position: fixed;
+  left: 50%;
+  bottom: 96px;
+  transform: translateX(-50%);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  pointer-events: none;
+}
+.toast {
+  background: #101010;
+  border: 1px solid var(--divider);
+  border-left: 4px solid var(--bar-line);
+  color: #eee;
+  padding: 12px 18px;
+  font-size: 14px;
+  max-width: min(420px, 86vw);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+  animation: toast-in 180ms ease;
+}
+.toast b { font-weight: 700; }
+.toast.toast-out { opacity: 0; transition: opacity 200ms ease; }
+@keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* ============ misc ============ */
+.dir-list { padding: 4px 0 20px; }
+.dir-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 12px 26px;
+  text-align: left;
+  transition: background-color 120ms ease;
+}
+.dir-row:hover { background: var(--row-hover); }
+.dir-row .dr-name { font-size: 15px; color: #fff; font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; }
+.dir-row .dr-sub { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+.about-line { font-size: 13px; color: var(--text-dim); text-align: center; margin-top: 26px; line-height: 1.7; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <span class="tb-title btnlike" id="tbTitle" title="Account">Player</span>
+    <div class="tb-right" id="tbIcon"></div>
+  </header>
+  <main class="screen" id="screen"></main>
+  <footer class="botbar" id="botbar" hidden>
+    <div class="bb-panel" id="bbPanel" hidden></div>
+    <div class="bb-row">
+      <button type="button" class="bb-left" id="bbLeft" title="Selected instance">
+        <span class="ir-icon" id="bbIcon"></span>
+        <span class="bb-version" id="bbVersion"></span>
+      </button>
+      <button type="button" class="bb-icon" id="bbExpand" aria-label="Switch instance" title="Switch instance"><span class="chev" id="bbChev"></span></button>
+      <button type="button" class="bb-icon" id="bbEdit" aria-label="Edit instance" title="Edit instance"><span id="bbPencil"></span></button>
+      <button type="button" class="play-btn" id="bbPlay">PLAY</button>
+    </div>
+  </footer>
+</div>
+<div id="toasts"></div>
+<input type="file" id="jarInput" accept=".jar,.java" hidden>
+
+<script>
+(() => {
+'use strict';
+
+/* ================= pixel icons ================= */
+function pix(map, pal, size) {
+  const h = map.length, w = map[0].length, s = size || 4;
+  let out = '<svg viewBox="0 0 ' + w + ' ' + h + '" width="' + (w * s) + '" height="' + (h * s) + '" shape-rendering="crispEdges" aria-hidden="true">';
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const c = map[y][x];
+    if (pal[c]) out += '<rect x="' + x + '" y="' + y + '" width="1" height="1" fill="' + pal[c] + '"/>';
+  }
+  return out + '</svg>';
+}
+const W = '#ffffff', D = '#c9c9c9';
+const PW = { W: W, '#': W };
+const PWD = { W: W, D: D, '#': W };
+const IC = {
+  wiki: pix([
+    '........',
+    '.WWWWWW.',
+    '.WDDDDW.',
+    '.WDWWDW.',
+    '.WDDWDW.',
+    '.WDWWDW.',
+    '.WDDDDW.',
+    '.WWWWWW.',
+  ], { W, D }, 5),
+  discord: pix([
+    '..........',
+    '..WWWWWW..',
+    '.WWWWWWWW.',
+    'WWW.WW.WWW',
+    'WWW.WW.WWW',
+    'WWWWWWWWWW',
+    '.WW.WW.WW.',
+    '..WWWWWW..',
+  ], { W: '#5865f2' }, 5),
+  controls: pix([
+    '........',
+    '.WWWWWW.',
+    'WWWWWWWW',
+    'WDW.WWDW',
+    'WDW.WWDW',
+    'WWWWWWWW',
+    '.WW..WW.',
+    '........',
+  ], { W, D }, 5),
+  jar: pix([
+    '........',
+    '..W..W..',
+    '.WWWWWW.',
+    '.WDDDDW.',
+    '.WDDDDW#',
+    '.WDDDDW.',
+    '.WWWWWW.',
+    '........',
+  ], PWD, 5),
+  log: pix([
+    '.WWWWW..',
+    '.WDDD#..',
+    '.WWWWW..',
+    '....#...',
+    '.....#..',
+    '....#...',
+    '...###..',
+    '........',
+  ], PWD, 5),
+  folder: pix([
+    '........',
+    '.WWWW...',
+    '.WDDW##.',
+    '.WWWWWW.',
+    '.W....W.',
+    '.W....W.',
+    '.WWWWWW.',
+    '........',
+  ], PWD, 5),
+  gear: pix([
+    '..W..W..',
+    '.WW..WW.',
+    'WWW..WWW',
+    '..WWW#..',
+    '..#WWW..',
+    'WWW..WWW',
+    '.WW..WW.',
+    '..W..W..',
+  ], PWD, 5),
+  home: pix([
+    '...##...',
+    '..####..',
+    '.######.',
+    '########',
+    '.######.',
+    '.#W##W#.',
+    '.#W##W#.',
+    '.######.',
+  ], { W }, 5),
+  pencil: pix([
+    '..WWWW..',
+    '..WWWW..',
+    '..WDDW..',
+    '..WWWW..',
+    '..WWWW..',
+    '..WWWW..',
+    '...WW...',
+    '...WW...',
+  ], PWD, 5),
+  plus: pix([
+    '........',
+    '...WW...',
+    '...WW...',
+    '.WWWWWW.',
+    '.WWWWWW.',
+    '...WW...',
+    '...WW...',
+    '........',
+  ], { W }, 5),
+  chevUp: pix([
+    '........',
+    '...##...',
+    '..####..',
+    '.######.',
+    '########',
+    '........',
+    '........',
+    '........',
+  ], PW, 5),
+  check: pix([
+    '........',
+    '.....##.',
+    '....##..',
+    '.#.#....',
+    '.##.....',
+    '..#.....',
+    '........',
+    '........',
+  ], PW, 4),
+  grass: pix([
+    'GGgGGGgG',
+    'gGGgGGGg',
+    'DdDDdDDD',
+    'DDdDDdDD',
+    'dDDDdDDD',
+    'DDDDdDDD',
+    'dDDDDDDd',
+    'DDDDDDDD',
+  ], { G: '#5d9b3c', g: '#73b34e', D: '#79553a', d: '#644329' }, 5),
+  fileIcon: pix([
+    '..###...',
+    '..#.#...',
+    '..#..#..',
+    '..#..#..',
+    '..#.#...',
+    '..###...',
+    '........',
+    '........',
+  ], { W }, 4),
+};
+
+/* ================= catalog ================= */
+const VERSIONS = [
+  { id: 'latest-release', label: 'Latest Release', ver: '26.3', file: '26-3.html' },
+  { id: 'release-26-2', label: 'Release 26.2', ver: '26.2', file: '26-2.html' },
+  { id: 'release-1-21-11', label: 'Release 1.21.11', ver: '1.21.11', file: '21-11.html' },
+  { id: 'release-1-20-6', label: 'Release 1.20.6', ver: '1.20.6', file: '20-6.html' },
+  { id: 'release-1-16-5', label: 'Release 1.16.5', ver: '1.16.5', file: '16-5.html' },
+  { id: 'release-1-12-2', label: 'Release 1.12.2', ver: '1.12.2', file: '12-2.html' },
+  { id: 'release-1-8-8', label: 'Release 1.8.8', ver: '1.8.8', file: '8-8.html' },
+  { id: 'release-1-7-10', label: 'Release 1.7.10', ver: '1.7.10', file: '7-10.html' },
+  { id: 'release-1-6-4', label: 'Release 1.6.4', ver: '1.6.4', file: '6-4.html' },
+  { id: 'release-1-5-2', label: 'Release 1.5.2', ver: '1.5.2', file: '5-2.html' },
+  { id: 'release-1-4-7', label: 'Release 1.4.7', ver: '1.4.7', file: '4-7.html' },
+  { id: 'release-1-3-2', label: 'Release 1.3.2', ver: '1.3.2', file: '3-2.html' },
+  { id: 'release-1-2-5', label: 'Release 1.2.5', ver: '1.2.5', file: '2-5.html' },
+  { id: 'release-1-1', label: 'Release 1.1', ver: '1.1', file: '1.html' },
+  { id: 'release-1', label: 'Release 1', ver: '1', file: '0.html' },
+];
+function getVersion(id) { return VERSIONS.find(v => v.id === id) || VERSIONS[0]; }
+
+const RENDERERS = [
+  { id: 'holy', label: 'Holy GL4ES - all versions till 1.21.4, fast' },
+  { id: 'gl4es', label: 'gl4es 1.1.5 - all versions, balanced' },
+  { id: 'zink', label: 'Zink (Vulkan) - latest versions, experimental' },
+];
+const JAVA_RUNTIMES = ['Java 8', 'Java 17', 'Java 21', 'Java 22'];
+const CONTROLMAPS = ['Default', 'Keyboard', 'Gamepad', 'Touchscreen'];
+
+const CREATE_BUTTONS = [
+  { section: 'Vanilla-like versions', items: [
+    { label: 'CREATE VANILLA INSTANCE', name: '' },
+    { label: 'INSTALL OPTIFINE', name: 'OptiFine' },
+  ] },
+  { section: 'Modded versions', items: [
+    { label: 'CREATE FABRIC INSTANCE', name: 'Fabric instance' },
+    { label: 'CREATE QUILT INSTANCE', name: 'Quilt instance' },
+    { label: 'CREATE LEGACY FABRIC INSTANCE', name: 'Legacy Fabric instance' },
+    { label: 'CREATE FORGE INSTANCE', name: 'Forge instance' },
+    { label: 'CREATE NEOFORGE INSTANCE', name: 'NeoForge instance' },
+    { label: 'CREATE MODPACK INSTANCE', name: 'Modpack instance' },
+    { label: 'CREATE "BETTER THAN ADVENTURE!" INSTANCE', name: 'Better Than Adventure! instance' },
+  ] },
+];
+
+/* ================= state ================= */
+const LS_KEY = 'mjlauncher-state';
+function defaultInstances() {
+  return [{
+    id: 'inst-latest',
+    name: '',
+    versionId: 'latest-release',
+    versionSpecified: true,
+    controlmap: '',
+    sharedData: false,
+    jvm: '',
+    javaRuntime: '',
+    renderer: 'holy',
+    createdAt: Date.now(),
+  }];
+}
+let state = {
+  username: 'Player',
+  selectedId: 'inst-latest',
+  instances: defaultInstances(),
+  settings: { jvm: '', javaRuntime: '', renderer: 'holy', controlmap: 'Default' },
+};
+function loadState() {
+  try {
+    const raw = localStorage.getItem(LS_KEY) || localStorage.getItem('mojolauncher-state');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      const s = parsed && parsed.state;
+      if (s && typeof s === 'object') {
+        if (typeof s.username === 'string' && s.username.trim()) state.username = s.username.trim().slice(0, 24);
+        if (Array.isArray(s.instances)) state.instances = s.instances;
+        if (typeof s.selectedId === 'string') state.selectedId = s.selectedId;
+        if (s.settings && typeof s.settings === 'object') state.settings = Object.assign(state.settings, s.settings);
+      }
+    }
+  } catch (e) { /* storage unavailable */ }
+  if (!Array.isArray(state.instances)) state.instances = [];
+  state.instances = state.instances.filter(i => i && typeof i === 'object' && VERSIONS.some(v => v.id === i.versionId));
+  state.instances.forEach(i => {
+    if (typeof i.renderer !== 'string' || !RENDERERS.some(r => r.id === i.renderer)) i.renderer = 'holy';
+    if (typeof i.name !== 'string') i.name = '';
+    if (typeof i.controlmap !== 'string') i.controlmap = '';
+    if (typeof i.jvm !== 'string') i.jvm = '';
+    if (typeof i.javaRuntime !== 'string') i.javaRuntime = '';
+    if (typeof i.sharedData !== 'boolean') i.sharedData = false;
+    if (typeof i.versionSpecified !== 'boolean') i.versionSpecified = true;
+  });
+  if (!state.instances.length) state.instances = defaultInstances();
+  if (!state.instances.some(i => i.id === state.selectedId)) state.selectedId = state.instances[0].id;
+  if (!CONTROLMAPS.includes(state.settings.controlmap)) state.settings.controlmap = 'Default';
+  if (!RENDERERS.some(r => r.id === state.settings.renderer)) state.settings.renderer = 'holy';
+}
+function persist() {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify({ state, version: 0 }));
+  } catch (e) { /* storage unavailable */ }
+}
+function selected() { return state.instances.find(i => i.id === state.selectedId) || null; }
+function instTitle(i) { return i.name ? i.name : getVersion(i.versionId).label; }
+function bbText(i) { return i.name ? i.name + ' - ' + getVersion(i.versionId).label : getVersion(i.versionId).label; }
+
+/* ================= helpers ================= */
+const $ = (sel, root) => (root || document).querySelector(sel);
+const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
+function el(tag, cls, html) { const n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; }
+function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+function toast(html) {
+  const vp = $('#toasts');
+  const t = el('div', 'toast', html);
+  vp.appendChild(t);
+  setTimeout(() => { t.classList.add('toast-out'); setTimeout(() => t.remove(), 220); }, 4200);
+}
+
+/* ================= navigation ================= */
+let screen = 'main';
+function go(name) {
+  screen = name;
+  render();
+}
+
+/* ================= top bar ================= */
+function renderTopbar() {
+  const title = $('#tbTitle');
+  const iconHost = $('#tbIcon');
+  iconHost.innerHTML = '';
+  if (screen === 'main') {
+    title.textContent = state.username;
+    title.classList.add('btnlike');
+    title.onclick = () => go('account');
+    const gear = el('button', 'tb-icon', IC.gear);
+    gear.type = 'button';
+    gear.title = 'Settings';
+    gear.setAttribute('aria-label', 'Settings');
+    gear.addEventListener('click', () => go('settings'));
+    iconHost.appendChild(gear);
+  } else {
+    title.classList.remove('btnlike');
+    title.onclick = null;
+    if (screen === 'account' || screen === 'login') title.textContent = '+ Add account';
+    else if (screen === 'editor') title.textContent = editorDraft && editorDraft.name ? editorDraft.name : 'Unnamed';
+    else if (screen === 'create') title.textContent = 'Create new instance';
+    else if (screen === 'settings') title.textContent = 'Settings';
+    else if (screen === 'controls') title.textContent = 'Custom controls';
+    else if (screen === 'gamedir') title.textContent = 'Game directory';
+    const home = el('button', 'tb-icon', IC.home);
+    home.type = 'button';
+    home.title = 'Home';
+    home.setAttribute('aria-label', 'Back to launcher');
+    home.addEventListener('click', () => go('main'));
+    iconHost.appendChild(home);
+  }
+}
+
+/* ================= bottom bar ================= */
+function renderBotbar() {
+  const bar = $('#botbar');
+  if (screen !== 'main') { bar.hidden = true; closePanel(); return; }
+  bar.hidden = false;
+  const inst = selected();
+  $('#bbIcon').innerHTML = IC.grass;
+  $('#bbVersion').textContent = inst ? bbText(inst) : 'Create an instance to play';
+  $('#bbPlay').disabled = !inst;
+  $('#bbPencil').innerHTML = IC.pencil;
+  $('#bbChev').innerHTML = IC.chevUp;
+  $('#bbEdit').disabled = !inst;
+}
+function closePanel() {
+  $('#bbPanel').hidden = true;
+  $('#bbExpand').classList.remove('open');
+}
+function togglePanel() {
+  const panel = $('#bbPanel');
+  const opening = panel.hidden;
+  closePanel();
+  if (!opening) return;
+  const inst = selected();
+  panel.innerHTML = '';
+  state.instances.forEach(i => {
+    const row = el('button', 'inst-row' + (inst && i.id === inst.id ? ' sel' : ''));
+    row.type = 'button';
+    row.innerHTML =
+      '<span class="ir-icon">' + IC.grass + '</span>' +
+      '<span class="ir-txt"><span class="ir-name">' + esc(instTitle(i)) + '</span>' +
+      (i.name ? '<span class="ir-sub">' + esc(getVersion(i.versionId).label) + '</span>' : '') + '</span>';
+    row.addEventListener('click', () => {
+      state.selectedId = i.id;
+      persist();
+      closePanel();
+      render();
+      toast('Switched to <b>' + esc(instTitle(i)) + '</b>');
+    });
+    panel.appendChild(row);
+  });
+  if (!state.instances.length) panel.appendChild(el('div', 'ov-empty', 'No instances yet.'));
+  panel.hidden = false;
+  $('#bbExpand').classList.add('open');
+}
+
+/* ================= main screen ================= */
+function renderMain() {
+  const host = $('#screen');
+  host.innerHTML = '';
+
+  const menu = el('div', 'menu-wrap');
+  const leftCol = el('div', 'menu-col');
+  const rightCol = el('div', 'menu-col right-col');
+  const items = [
+    { icon: IC.wiki, label: 'WIKI', act: () => { window.open('https://mojolauncher.ru', '_blank'); } },
+    { icon: IC.controls, label: 'CUSTOM CONTROLS', act: () => go('controls') },
+    { icon: IC.jar, label: 'EXECUTE A .JAR', act: () => $('#jarInput').click() },
+    { icon: IC.log, label: 'SHARE LOG FILE', act: shareLog },
+    { icon: IC.folder, label: 'OPEN GAME DIRECTORY', act: () => go('gamedir') },
+  ];
+  items.forEach(it => {
+    const b = el('button', 'menu-item');
+    b.type = 'button';
+    b.innerHTML = it.icon + '<span class="mi-label">' + it.label + '</span>';
+    b.addEventListener('click', it.act);
+    leftCol.appendChild(b);
+  });
+  const discord = el('button', 'menu-item');
+  discord.type = 'button';
+  discord.innerHTML = IC.discord + '<span class="mi-label">DISCORD</span>';
+  discord.addEventListener('click', () => { window.open('https://discord.com', '_blank'); });
+  rightCol.appendChild(discord);
+  menu.appendChild(leftCol);
+  menu.appendChild(rightCol);
+  host.appendChild(menu);
+
+  const section = el('div', 'inst-section');
+  const inst = selected();
+  state.instances.forEach(i => {
+    const row = el('button', 'inst-row' + (inst && i.id === inst.id ? ' sel' : ''));
+    row.type = 'button';
+    row.title = 'Select instance';
+    row.innerHTML =
+      '<span class="ir-icon">' + IC.grass + '</span>' +
+      '<span class="ir-txt"><span class="ir-name">' + esc(instTitle(i)) + '</span>' +
+      (i.name ? '<span class="ir-sub">' + esc(getVersion(i.versionId).label) + '</span>' : '') + '</span>';
+    row.addEventListener('click', () => { state.selectedId = i.id; persist(); render(); });
+    section.appendChild(row);
+  });
+  const create = el('button', 'inst-row');
+  create.type = 'button';
+  create.innerHTML = '<span class="ir-icon">' + IC.plus + '</span><span class="ir-txt"><span class="ir-name">Create new instance</span></span>';
+  create.addEventListener('click', () => go('create'));
+  section.appendChild(create);
+  host.appendChild(section);
+}
+
+/* ================= create screen ================= */
+function renderCreate() {
+  const host = $('#screen');
+  host.innerHTML = '';
+  const page = el('div', 'page-wide');
+  CREATE_BUTTONS.forEach(sec => {
+    page.appendChild(el('div', 'section-title', esc(sec.section)));
+    const stack = el('div', 'stack');
+    stack.style.padding = '0 26px';
+    sec.items.forEach(item => {
+      const b = el('button', 'btn-teal');
+      b.type = 'button';
+      b.textContent = item.label;
+      b.addEventListener('click', () => openEditor(null, item.name));
+      stack.appendChild(b);
+    });
+    page.appendChild(stack);
+  });
+  host.appendChild(page);
+}
+
+/* ================= instance editor ================= */
+let editorDraft = null;
+let editorMode = 'create';
+let editorId = null;
+
+function openEditor(existing, presetName) {
+  if (existing) {
+    editorMode = 'edit';
+    editorId = existing.id;
+    editorDraft = {
+      name: existing.name,
+      versionId: existing.versionId,
+      versionSpecified: existing.versionSpecified,
+      controlmap: existing.controlmap,
+      sharedData: existing.sharedData,
+      jvm: existing.jvm,
+      javaRuntime: existing.javaRuntime,
+      renderer: existing.renderer,
+    };
+  } else {
+    editorMode = 'create';
+    editorId = null;
+    editorDraft = {
+      name: presetName || '',
+      versionId: 'latest-release',
+      versionSpecified: false,
+      controlmap: '',
+      sharedData: false,
+      jvm: '',
+      javaRuntime: '',
+      renderer: 'holy',
+    };
+  }
+  go('editor');
+}
+
+function renderEditor() {
+  const host = $('#screen');
+  host.innerHTML = '';
+  const d = editorDraft;
+  const page = el('div', 'page');
+  const stack = el('div', 'stack');
+
+  // Name
+  const nameField = el('div', 'field');
+  nameField.innerHTML = '<span class="field-label">Name</span>';
+  const nameInput = el('input', 'f-input');
+  nameInput.type = 'text';
+  nameInput.placeholder = 'Unnamed';
+  nameInput.value = d.name;
+  nameInput.maxLength = 40;
+  nameInput.addEventListener('input', () => { d.name = nameInput.value; });
+  nameField.appendChild(nameInput);
+  stack.appendChild(nameField);
+
+  // Version + SELECT
+  const verField = el('div', 'field');
+  verField.innerHTML = '<span class="field-label">Version</span>';
+  const verRow = el('div', 'field-row');
+  const verVal = el('button', 'f-value' + (d.versionSpecified ? '' : ' dim'));
+  verVal.type = 'button';
+  verVal.style.flex = '1';
+  const v = getVersion(d.versionId);
+  verVal.innerHTML = '<span>' + esc(v.label) + '</span>';
+  verVal.addEventListener('click', () => openPicker('version'));
+  const verBtn = el('button', 'btn-gray');
+  verBtn.type = 'button';
+  verBtn.textContent = 'SELECT';
+  verBtn.addEventListener('click', () => openPicker('version'));
+  verRow.appendChild(verVal);
+  verRow.appendChild(verBtn);
+  verField.appendChild(verRow);
+  stack.appendChild(verField);
+
+  // Controlmap + SELECT
+  const mapField = el('div', 'field');
+  mapField.innerHTML = '<span class="field-label">Default controlmap</span>';
+  const mapRow = el('div', 'field-row');
+  const mapVal = el('button', 'f-value' + (d.controlmap ? '' : ' dim'));
+  mapVal.type = 'button';
+  mapVal.style.flex = '1';
+  mapVal.innerHTML = '<span>' + esc(d.controlmap ? d.controlmap : '(Use global default)') + '</span>';
+  mapVal.addEventListener('click', () => openPicker('map'));
+  const mapBtn = el('button', 'btn-gray');
+  mapBtn.type = 'button';
+  mapBtn.textContent = 'SELECT';
+  mapBtn.addEventListener('click', () => openPicker('map'));
+  mapRow.appendChild(mapVal);
+  mapRow.appendChild(mapBtn);
+  mapField.appendChild(mapRow);
+  stack.appendChild(mapField);
+
+  // Shared data toggle
+  const sharedField = el('div', 'field');
+  sharedField.innerHTML = '<span class="field-label">Shared data</span>';
+  const tog = el('div', 'toggle-row' + (d.sharedData ? ' on' : ''));
+  const togVal = el('div', 'f-value' + (d.sharedData ? '' : ' dim'));
+  togVal.innerHTML = '<span class="sub">Store game data in a shared directory</span>';
+  tog.appendChild(togVal);
+  tog.addEventListener('click', () => {
+    d.sharedData = !d.sharedData;
+    render();
+  });
+  sharedField.appendChild(tog);
+  stack.appendChild(sharedField);
+
+  // JVM arguments
+  const jvmField = el('div', 'field');
+  jvmField.innerHTML = '<span class="field-label">JVM arguments</span>';
+  const jvmInput = el('input', 'f-input');
+  jvmInput.type = 'text';
+  jvmInput.placeholder = '(Use global default)';
+  jvmInput.value = d.jvm;
+  jvmInput.addEventListener('input', () => { d.jvm = jvmInput.value; });
+  jvmField.appendChild(jvmInput);
+  stack.appendChild(jvmField);
+
+  // Java runtime
+  const javaField = el('div', 'field');
+  javaField.innerHTML = '<span class="field-label">Java Runtime</span>';
+  const javaSel = el('select', 'f-select');
+  const javaDefault = el('option', '', '&lt;Default&gt;');
+  javaDefault.value = '';
+  if (!d.javaRuntime) javaDefault.selected = true;
+  javaSel.appendChild(javaDefault);
+  JAVA_RUNTIMES.forEach(j => {
+    const o = el('option', '', esc(j));
+    o.value = j;
+    if (d.javaRuntime === j) o.selected = true;
+    javaSel.appendChild(o);
+  });
+  javaSel.addEventListener('change', () => { d.javaRuntime = javaSel.value; });
+  javaField.appendChild(javaSel);
+  stack.appendChild(javaField);
+
+  // Renderer
+  const renField = el('div', 'field');
+  renField.innerHTML = '<span class="field-label">Renderer</span>';
+  const renSel = el('select', 'f-select');
+  RENDERERS.forEach(r => {
+    const o = el('option', '', esc(r.label));
+    o.value = r.id;
+    if (d.renderer === r.id) o.selected = true;
+    renSel.appendChild(o);
+  });
+  renSel.addEventListener('change', () => { d.renderer = renSel.value; });
+  renField.appendChild(renSel);
+  stack.appendChild(renField);
+
+  page.appendChild(stack);
+
+  const duo = el('div', 'duo');
+  const save = el('button', 'btn-teal');
+  save.type = 'button';
+  save.textContent = 'SAVE';
+  save.addEventListener('click', saveEditor);
+  duo.appendChild(save);
+  const del = el('button', 'btn-teal');
+  del.type = 'button';
+  del.textContent = 'DELETE';
+  del.addEventListener('click', deleteEditor);
+  duo.appendChild(del);
+  page.appendChild(duo);
+
+  host.appendChild(page);
+}
+
+function saveEditor() {
+  const d = editorDraft;
+  const clean = {
+    name: d.name.trim(),
+    versionId: d.versionId,
+    versionSpecified: d.versionSpecified,
+    controlmap: d.controlmap,
+    sharedData: d.sharedData,
+    jvm: d.jvm.trim(),
+    javaRuntime: d.javaRuntime,
+    renderer: d.renderer,
+  };
+  if (editorMode === 'create') {
+    const inst = Object.assign({}, clean, {
+      id: 'inst-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
+      createdAt: Date.now(),
+    });
+    state.instances.push(inst);
+    state.selectedId = inst.id;
+    toast('Instance created: <b>' + esc(instTitle(inst)) + '</b>');
+  } else {
+    const idx = state.instances.findIndex(i => i.id === editorId);
+    if (idx >= 0) {
+      state.instances[idx] = Object.assign({}, state.instances[idx], clean);
+      toast('Saved instance: <b>' + esc(instTitle(state.instances[idx])) + '</b>');
+    }
+  }
+  persist();
+  editorDraft = null;
+  go('main');
+}
+
+function deleteEditor() {
+  if (editorMode === 'create') {
+    toast('Instance creation cancelled');
+    editorDraft = null;
+    go('main');
+    return;
+  }
+  const idx = state.instances.findIndex(i => i.id === editorId);
+  const name = idx >= 0 ? instTitle(state.instances[idx]) : 'instance';
+  if (idx >= 0) {
+    state.instances.splice(idx, 1);
+    if (state.selectedId === editorId) state.selectedId = state.instances[0] ? state.instances[0].id : '';
+  }
+  persist();
+  editorDraft = null;
+  toast('Deleted <b>' + esc(name) + '</b>');
+  go('main');
+}
+
+/* ================= picker overlay ================= */
+let pickerKind = null;
+function openPicker(kind) {
+  pickerKind = kind;
+  const ov = el('div', 'overlay');
+  ov.id = 'pickerOv';
+  const card = el('div', 'ov-card');
+  const head = el('div', 'ov-head');
+  head.innerHTML = '<span class="ov-title">' + (kind === 'version' ? 'Select version' : 'Select controlmap') + '</span>';
+  const close = el('button', 'tb-icon', pix(['........', '.#####..', '...#....', '...####.', '...#....', '.#####..', '........', '........'], PW, 3));
+  close.type = 'button';
+  close.title = 'Close';
+  close.setAttribute('aria-label', 'Close');
+  close.addEventListener('click', () => ov.remove());
+  head.appendChild(close);
+  card.appendChild(head);
+
+  const list = el('div', 'ov-list');
+  if (kind === 'version') {
+    const d = editorDraft;
+    VERSIONS.forEach(v => {
+      const row = el('button', 'ov-item');
+      row.type = 'button';
+      const sel = d.versionId === v.id && d.versionSpecified;
+      row.innerHTML =
+        '<span class="ir-icon">' + IC.grass + '</span>' +
+        '<span class="oi-txt"><span class="oi-main">' + esc(v.label) + '</span><span class="oi-sub">' + esc(v.file) + '</span></span>' +
+        (sel ? '<span class="oi-chk">' + IC.check + '</span>' : '');
+      row.addEventListener('click', () => {
+        d.versionId = v.id;
+        d.versionSpecified = true;
+        ov.remove();
+        render();
+      });
+      list.appendChild(row);
+    });
+  } else {
+    const d = editorDraft;
+    const opts = [''].concat(CONTROLMAPS);
+    opts.forEach(m => {
+      const row = el('button', 'ov-item');
+      row.type = 'button';
+      const label = m ? m : '(Use global default)';
+      const sub = m ? 'Instance-level controlmap' : 'Falls back to the global default (' + esc(state.settings.controlmap) + ')';
+      row.innerHTML =
+        '<span class="oi-txt"><span class="oi-main">' + esc(label) + '</span><span class="oi-sub">' + sub + '</span></span>' +
+        (d.controlmap === m ? '<span class="oi-chk">' + IC.check + '</span>' : '');
+      row.addEventListener('click', () => {
+        d.controlmap = m;
+        ov.remove();
+        render();
+      });
+      list.appendChild(row);
+    });
+  }
+  card.appendChild(list);
+  ov.appendChild(card);
+  ov.addEventListener('mousedown', e => { if (e.target === ov) ov.remove(); });
+  document.body.appendChild(ov);
+}
+
+/* ================= account / login ================= */
+function renderAccount() {
+  const host = $('#screen');
+  host.innerHTML = '';
+  const page = el('div', 'page');
+  const card = el('div', 'card');
+  card.appendChild(el('div', 'note', 'Choose an account type to continue.'));
+  const mk = (label) => {
+    const b = el('button', 'btn-teal');
+    b.type = 'button';
+    b.textContent = label;
+    return b;
+  };
+  const ms = mk('MICROSOFT ACCOUNT');
+  ms.addEventListener('click', () => toast('Microsoft login is not available in the web edition. Use a <b>local account</b>.'));
+  const ely = mk('ELY.BY ACCOUNT');
+  ely.addEventListener('click', () => toast('Ely.by login is not available in the web edition. Use a <b>local account</b>.'));
+  const local = mk('LOCAL ACCOUNT');
+  local.addEventListener('click', () => go('login'));
+  card.appendChild(ms);
+  card.appendChild(ely);
+  card.appendChild(local);
+  page.appendChild(card);
+  host.appendChild(page);
+}
+
+function renderLogin() {
+  const host = $('#screen');
+  host.innerHTML = '';
+  const page = el('div', 'page');
+  const card = el('div', 'card');
+  card.appendChild(el('span', 'field-label', 'Username'));
+  const input = el('input', 'f-input');
+  input.type = 'text';
+  input.placeholder = 'Username';
+  input.maxLength = 24;
+  input.value = '';
+  card.appendChild(input);
+  const btn = el('button', 'btn-teal');
+  btn.type = 'button';
+  btn.textContent = 'LOGIN';
+  const doLogin = () => {
+    const name = input.value.trim().slice(0, 24);
+    if (!name) { toast('Enter a username to log in'); return; }
+    state.username = name;
+    persist();
+    toast('Logged in as <b>' + esc(name) + '</b>');
+    go('main');
+  };
+  btn.addEventListener('click', doLogin);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+  card.appendChild(btn);
+  card.appendChild(el('div', 'note', 'A local account stores your username in this browser only.'));
+  page.appendChild(card);
+  host.appendChild(page);
+  setTimeout(() => { try { input.focus(); } catch (e) { /* noop */ } }, 60);
+}
+
+/* ================= settings ================= */
+function renderSettings() {
+  const host = $('#screen');
+  host.innerHTML = '';
+  const page = el('div', 'page');
+  const stack = el('div', 'stack');
+
+  const jvmField = el('div', 'field');
+  jvmField.innerHTML = '<span class="field-label">JVM arguments (global default)</span>';
+  const jvmInput = el('input', 'f-input');
+  jvmInput.type = 'text';
+  jvmInput.placeholder = '(Use global default)';
+  jvmInput.value = state.settings.jvm;
+  jvmInput.addEventListener('input', () => { state.settings.jvm = jvmInput.value; });
+  jvmField.appendChild(jvmInput);
+  stack.appendChild(jvmField);
+
+  const javaField = el('div', 'field');
+  javaField.innerHTML = '<span class="field-label">Java Runtime (global default)</span>';
+  const javaSel = el('select', 'f-select');
+  const jdef = el('option', '', '&lt;Default&gt;');
+  jdef.value = '';
+  if (!state.settings.javaRuntime) jdef.selected = true;
+  javaSel.appendChild(jdef);
+  JAVA_RUNTIMES.forEach(j => {
+    const o = el('option', '', esc(j));
+    o.value = j;
+    if (state.settings.javaRuntime === j) o.selected = true;
+    javaSel.appendChild(o);
+  });
+  javaSel.addEventListener('change', () => { state.settings.javaRuntime = javaSel.value; });
+  javaField.appendChild(javaSel);
+  stack.appendChild(javaField);
+
+  const renField = el('div', 'field');
+  renField.innerHTML = '<span class="field-label">Renderer (global default)</span>';
+  const renSel = el('select', 'f-select');
+  RENDERERS.forEach(r => {
+    const o = el('option', '', esc(r.label));
+    o.value = r.id;
+    if (state.settings.renderer === r.id) o.selected = true;
+    renSel.appendChild(o);
+  });
+  renSel.addEventListener('change', () => { state.settings.renderer = renSel.value; });
+  renField.appendChild(renSel);
+  stack.appendChild(renField);
+
+  const btn = el('button', 'btn-teal');
+  btn.type = 'button';
+  btn.textContent = 'SAVE SETTINGS';
+  btn.addEventListener('click', () => { persist(); toast('Settings saved'); go('main'); });
+  stack.appendChild(btn);
+
+  const reset = el('button', 'btn-teal');
+  reset.type = 'button';
+  reset.textContent = 'RESET LAUNCHER DATA';
+  reset.addEventListener('click', () => {
+    try { localStorage.removeItem(LS_KEY); localStorage.removeItem('mojolauncher-state'); } catch (e) { /* noop */ }
+    state = { username: 'Player', selectedId: 'inst-latest', instances: defaultInstances(), settings: { jvm: '', javaRuntime: '', renderer: 'holy', controlmap: 'Default' } };
+    persist();
+    toast('Launcher data was reset');
+    go('main');
+  });
+  stack.appendChild(reset);
+
+  page.appendChild(stack);
+  page.appendChild(el('div', 'about-line', 'MJLauncher - web edition<br>Username, instances and settings are saved in this browser.'));
+  host.appendChild(page);
+}
+
+/* ================= custom controls ================= */
+function renderControls() {
+  const host = $('#screen');
+  host.innerHTML = '';
+  const page = el('div', 'page');
+  page.appendChild(el('div', 'note', 'Pick the default controlmap used by new instances. Instances set to "(Use global default)" follow this choice.')).style.maxWidth = '560px';
+  const stack = el('div', 'stack');
+  stack.style.marginTop = '22px';
+  CONTROLMAPS.forEach(m => {
+    const row = el('button', 'ov-item');
+    row.type = 'button';
+    row.style.border = '1px solid #3a3a3a';
+    row.style.borderRadius = '6px';
+    row.style.background = '#202020';
+    row.innerHTML =
+      '<span class="oi-txt"><span class="oi-main">' + esc(m) + '</span></span>' +
+      (state.settings.controlmap === m ? '<span class="oi-chk">' + IC.check + '</span>' : '');
+    row.addEventListener('click', () => {
+      state.settings.controlmap = m;
+      persist();
+      toast('Default controlmap: <b>' + esc(m) + '</b>');
+      render();
+    });
+    stack.appendChild(row);
+  });
+  page.appendChild(stack);
+  host.appendChild(page);
+}
+
+/* ================= game directory ================= */
+function renderGameDir() {
+  const host = $('#screen');
+  host.innerHTML = '';
+  const page = el('div', 'page-wide dir-list');
+  const title = el('div', 'section-title', 'Game directory');
+  page.appendChild(title);
+  VERSIONS.forEach(v => {
+    const row = el('button', 'dir-row');
+    row.type = 'button';
+    row.innerHTML =
+      '<span class="ir-icon">' + IC.fileIcon + '</span>' +
+      '<span class="dr-name">' + esc(v.file) + '</span>' +
+      '<span class="dr-sub" style="margin-left:auto">' + esc(v.label) + '</span>';
+    row.addEventListener('click', () => toast('<b>' + esc(v.file) + '</b> is the game file for ' + esc(v.label) + '.'));
+    page.appendChild(row);
+  });
+  host.appendChild(page);
+}
+
+/* ================= actions ================= */
+function shareLog() {
+  const inst = selected();
+  const lines = [
+    'MJLauncher log',
+    'Time: ' + new Date().toString(),
+    'Username: ' + state.username,
+    'Selected instance: ' + (inst ? bbText(inst) : 'none'),
+    'Instances: ' + state.instances.length,
+    'Global renderer: ' + (RENDERERS.find(r => r.id === state.settings.renderer) || RENDERERS[0]).label,
+    'Global controlmap: ' + state.settings.controlmap,
+    '---',
+    'Ready to play.',
+  ];
+  const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'latestlog.txt';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  toast('Log file downloaded as <b>latestlog.txt</b>');
+}
+
+function play() {
+  const inst = selected();
+  if (!inst) { toast('Create an instance first'); return; }
+  inst.lastPlayed = Date.now();
+  persist();
+  window.location.href = getVersion(inst.versionId).file;
+}
+
+/* ================= render root ================= */
+function render() {
+  closePanel();
+  renderTopbar();
+  renderBotbar();
+  if (screen === 'main') renderMain();
+  else if (screen === 'create') renderCreate();
+  else if (screen === 'editor') renderEditor();
+  else if (screen === 'account') renderAccount();
+  else if (screen === 'login') renderLogin();
+  else if (screen === 'settings') renderSettings();
+  else if (screen === 'controls') renderControls();
+  else if (screen === 'gamedir') renderGameDir();
+  else renderMain();
+}
+
+/* ================= PWA Service Worker ================= */
+if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+
+/* ================= boot ================= */
+loadState();
+$('#bbPlay').addEventListener('click', play);
+$('#bbExpand').addEventListener('click', togglePanel);
+$('#bbEdit').addEventListener('click', () => { const i = selected(); if (i) openEditor(i, ''); });
+$('#bbLeft').addEventListener('click', togglePanel);
+$('#jarInput').addEventListener('change', e => {
+  const f = e.target.files && e.target.files[0];
+  if (f) toast('Executing <b>' + esc(f.name) + '</b> in the game runtime...');
+  e.target.value = '';
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    const ov = $('#pickerOv');
+    if (ov) { ov.remove(); return; }
+    closePanel();
+  }
+});
+render();
+})();
+</script>
+</body>
+</html>
