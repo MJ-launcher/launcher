@@ -1,12 +1,13 @@
 /* MJLauncher service worker — offline support for the launcher and all games. */
 'use strict';
 
-var VERSION = 'mjlauncher-v3';
+var VERSION = 'mjlauncher-v4';
 var PRECACHE = [
   './',
   './index.html',
   './manifest.webmanifest',
   './apple-touch-icon.png',
+  './apple-touch-icon-180.png',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/icon-maskable-192.png',
