@@ -3,6 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- PWA Manifest & Theme -->
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#000000">
+
+<!-- iOS PWA Support -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MJLauncher">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
 <title>MJLauncher</title>
 <meta name="description" content="MJLauncher - play Minecraft: Java Edition, manage instances and launch any version.">
 <link rel="icon" type="image/png" sizes="48x48" href="data:image/png;base64,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">
@@ -1363,6 +1372,19 @@ render();
     navigator.serviceWorker.register('sw.js').catch(function () {});
   });
 })();
+</script>
+  <script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => {
+          console.log('ServiceWorker registration successful with scope: ', reg.scope);
+        })
+        .catch(err => {
+          console.log('ServiceWorker registration failed: ', err);
+        });
+    });
+  }
 </script>
 </body>
 </html>
